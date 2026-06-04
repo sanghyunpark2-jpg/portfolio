@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📊 주식 포트폴리오</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f7f8fc; font-family: 'Segoe UI', sans-serif; color: #333; }
+    input, textarea, button { font-family: 'Segoe UI', sans-serif; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    ::-webkit-scrollbar { height: 4px; width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #dde1ec; border-radius: 4px; }
+
+    .login-container {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .login-box {
+      background: #fff; border-radius: 16px; padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%; max-width: 400px;
+    }
+    .login-box h1 { font-size: 28px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; text-align: center; }
+    .login-box p { font-size: 14px; color: #888; text-align: center; margin-bottom: 24px; }
+    .login-input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+    .login-input-group input {
+      flex: 1; padding: 12px 16px; font-size: 14px;
+      border: 2px solid #e0e4ef; border-radius: 8px; outline: none;
+    }
+    .login-input-group button {
+      padding: 12px 24px; background: #667eea; color: #fff;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer;
+    }
+    .login-hint { font-size: 12px; color: #bbb; text-align: center; }
+
+    .app-container { max-width: 760px; margin: 0 auto; padding: 18px 14px; background: #f7f8fc; min-height: 100vh; }
+    .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .app-header h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+    .app-header-right { display: flex; gap: 8px; align-items: center; }
+    .app-header-right span { font-size: 12px; color: #888; font-weight: 600; }
+    button.logout-btn { padding: 5px 12px; background: #e0e4ef; color: #555; border: none; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    button.pdf-btn { padding: 5px 14px; background: #1a1a2e; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    .account-tabs { display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; background: #fff; border: 1px solid #e0e4ef; border-radius: 12px; padding: 8px 10px; }
+    .account-row { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+    .account-chip {
+      display: inline-flex; align-items: center; gap: 2px;
+      cursor: pointer; border-radius: 14px; padding: 3px 6px 3px 8px;
+      font-size: 10px; font-weight: 600; border: 1px solid;
+      flex-shrink: 0;
+    }
+    .account-chip-dot { width: 5px; height: 5px; border-radius: 50%; margin-right: 1px; flex-shrink: 0; }
+    .account-chip button { background: none; border: none; cursor: pointer; font-size: 9px; padding: 0; color: inherit; }
+
+    .add-account-btn {
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; border: 1px solid #dde1ec;
+      background: #eef; color: #1a1a2e; cursor: pointer; white-space: nowrap;
+    }
+    .combined-btn {
+      font-size: 11px; font-weight: 600; padding: 4px 12px;
+      border-radius: 20px; cursor: pointer; white-space: nowrap;
+      border: 1px solid #dde1ec; background: #fff; color: #555;
+    }
+    .combined-btn.active { background: #6c47d4; color: #fff; border-color: #6c47d4; }
+
+    .summary-card {
+      background: #fff; border: 1px solid #e0e4ef; border-radius: 10px;
+      padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-around;
+    }
+    .summary-item { padding: 2px 0 4px 0; border-bottom: 1px solid #f0f2f8; }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-label { font-size: 12px; font-weight: 700; color: #888; margin-bottom: 1px; }
+    .summary-value { font-size: 13px; font-weight: 700; }
+
+    .stocks-container {
+      background: #fff; border: 1px solid #e0e4ef; border-radius: 12px; overflow: hidden; margin-bottom: 14px;
+    }
+    .stocks-header {
+      display: grid; grid-template-columns: 16px 1fr 100px 60px;
+      padding: 7px 14px; background: #f0f2f8; font-size: 10px;
+      font-weight: 700; color: #888; border-bottom: 1px solid #e8eaf2;
+    }
+    .stock-row {
+      display: grid; grid-template-columns: 16px 1fr 100px 60px;
+      align-items: center; padding: 7px 14px; border-bottom: 1px solid #f0f2f8;
+    }
+    .stock-row:last-child { border-bottom: none; }
+    .stock-drag { font-size: 16px; color: #ccc; user-select: none; }
+    .stock-info { min-width: 0; display: flex; align-items: center; gap: 6px; }
+    .stock-tag {
+      font-size: 9px; font-weight: 700; border-radius: 10px;
+      padding: 1px 0; white-space: nowrap; flex-shrink: 0; width: 52px; text-align: center;
+    }
+    .stock-name { font-size: 12px; font-weight: 600; color: #1a1a2e; }
+    .stock-amount { text-align: right; font-size: 12px; font-weight: 700; }
+    .stock-actions { display: flex; justify-content: center; gap: 4px; }
+    .stock-actions button { background: none; border: none; cursor: pointer; font-size: 13px; padding: 2px 3px; }
+
+    .add-stock-form {
+      background: #fff; border: 1px solid #e0e4ef; border-radius: 12px;
+      padding: 14px; margin-bottom: 14px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    }
+    .add-stock-form input {
+      padding: 7px 8px; font-size: 12px; border: 1px solid #dde1ec;
+      border-radius: 8px; outline: none; background: #f7f8fc;
+    }
+    .add-stock-form input[placeholder="종목명"] { flex: 2 1 70px; min-width: 0; }
+    .add-stock-form input[placeholder="금액"] { flex: 1 1 60px; min-width: 0; }
+    .add-stock-form input[placeholder="섹터"] { flex: 1 1 50px; min-width: 0; }
+    .cat-btn {
+      font-size: 10px; font-weight: 600; padding: 6px 7px;
+      border-radius: 7px; cursor: pointer; flex-shrink: 0;
+      border: 1px solid #dde1ec; background: #f7f8fc; color: #666;
+    }
+    .cat-btn.active { color: #fff; }
+    .add-stock-btn {
+      padding: 7px 12px; background: #1a1a2e; color: #fff;
+      border: none; border-radius: 8px; font-size: 12px; font-weight: 600;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    .memo-input { width: 100%; font-size: 13px; font-weight: 600; color: #333;
+      border: none; border-bottom: 1px solid #dde1ec; background: transparent;
+      outline: none; padding: 2px 4px; margin-bottom: 10px;
+    }
+    .tabs-row { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+    .tab-btn {
+      font-size: 11px; font-weight: 600; padding: 5px 12px;
+      border-radius: 20px; cursor: pointer; border: 1px solid #dde1ec;
+      background: #fff; color: #555;
+    }
+    .tab-btn.active { background: #1a1a2e; color: #fff; }
+
+    .chart-container { background: #fff; border: 1px solid #e0e4ef; border-radius: 10px; padding: 10px 12px; }
+    svg { display: block; width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-container" style="display:none;">
+  <div class="login-box">
+    <h1>📊 주식 포트폴리오</h1>
+    <p>사용할 이름을 입력하세요</p>
+    <div class="login-input-group">
+      <input type="text" id="loginInput" placeholder="예: 상현, 영주" autofocus>
+      <button onclick="handleLogin()">시작</button>
+    </div>
+    <div class="login-hint">같은 이름으로 로그인하면<br>모든 기기에서 동기화됩니다</div>
+  </div>
+</div>
+
+<div id="appScreen" style="display:none;">
+  <div class="app-container">
+    <div class="app-header">
+      <h1>📊 주식 포트폴리오</h1>
+      <div class="app-header-right">
+        <span>👤 <span id="userNameDisplay"></span></span>
+        <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+        <button class="pdf-btn" onclick="window.print()">📄 PDF</button>
+      </div>
+    </div>
+
+    <div class="account-tabs" id="accountTabs"></div>
+
+    <div id="contentArea"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://aqzovbezjuywkucylyvn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_M8tQLNDgXj1vTNuOfHNpxA_gPCBB5qr";
+
+const catColor = { cash:"#2a9d5c", cash_eq:"#0096c7", cyclical:"#f7864f", defensive:"#4f8ef7", other:"#909090" };
+const catBg = { cash:"#e6f7ee", cash_eq:"#d0f0fc", cyclical:"#ffe8d6", defensive:"#ddeaff", other:"#e8e8e8" };
+const catBorder = { cash:"#9fdbbe", cash_eq:"#90d5f0", cyclical:"#f7c9aa", defensive:"#b8d0f7", other:"#d0d0d0" };
+const catLabel = { cash:"현금", cash_eq:"현금성자산", cyclical:"경기민감주", defensive:"경기방어주", other:"기타" };
+const CATS = ["cash","cash_eq","cyclical","defensive","other"];
+const COMBINED = "__combined__";
+
+let userName = null;
+let data = { accounts: [], activeId: null };
+const fmt = n => "$" + Math.round(Number(n)).toLocaleString("en-US");
+
+function handleLogin() {
+  const input = document.getElementById('loginInput');
+  if (!input.value.trim()) return;
+  userName = input.value.trim();
+  localStorage.setItem("portfolio_userName", userName);
+  loadData();
+  renderUI();
+}
+
+function handleLogout() {
+  userName = null;
+  localStorage.removeItem("portfolio_userName");
+  document.getElementById('loginScreen').style.display = '';
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginInput').value = '';
+}
+
+async function loadData() {
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/portfolios?user_name=eq.${encodeURIComponent(userName)}&limit=1`;
+    const response = await fetch(url, {
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" }
+    });
+    const result = await response.json();
+    if (result && result.length > 0 && result[0].portfolio_data) {
+      data = result[0].portfolio_data;
+    }
+  } catch (e) {
+    console.log('First login - starting fresh');
+  }
+}
+
+async function saveData() {
+  if (!userName) return;
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/portfolios?user_name=eq.${encodeURIComponent(userName)}&limit=1`;
+    const response = await fetch(url, {
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" }
+    });
+    const existing = await response.json();
+    
+    const method = existing && existing.length > 0 ? 'PATCH' : 'POST';
+    const purl = existing && existing.length > 0
+      ? `${SUPABASE_URL}/rest/v1/portfolios?user_name=eq.${encodeURIComponent(userName)}`
+      : `${SUPABASE_URL}/rest/v1/portfolios`;
+    
+    await fetch(purl, {
+      method,
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(existing && existing.length > 0 ? { portfolio_data: data } : { user_name: userName, portfolio_data: data })
+    });
+  } catch (e) {
+    console.error('Save error:', e);
+  }
+}
+
+function addAccount(name) {
+  if (!name.trim()) return;
+  const id = Date.now();
+  data.accounts.push({ id, name: name.trim(), stocks: [], row: 0 });
+  data.activeId = id;
+  saveData();
+  renderUI();
+}
+
+function addStock(name, amount, sector, category) {
+  if (!data.activeId || !name.trim()) return;
+  const amt = parseFloat(amount);
+  if (isNaN(amt) || amt <= 0) return;
+  const acc = data.accounts.find(a => a.id === data.activeId);
+  if (acc) {
+    acc.stocks.push({
+      id: Date.now(),
+      name: name.trim(),
+      sector: sector.trim(),
+      amount: amt,
+      category
+    });
+    saveData();
+    renderUI();
+  }
+}
+
+function deleteStock(stockId) {
+  const acc = data.accounts.find(a => a.id === data.activeId);
+  if (acc) {
+    acc.stocks = acc.stocks.filter(s => s.id !== stockId);
+    saveData();
+    renderUI();
+  }
+}
+
+function renderUI() {
+  const loginScreen = document.getElementById('loginScreen');
+  const appScreen = document.getElementById('appScreen');
+  
+  if (!userName) {
+    loginScreen.style.display = '';
+    appScreen.style.display = 'none';
+    return;
+  }
+  
+  loginScreen.style.display = 'none';
+  appScreen.style.display = '';
+  document.getElementById('userNameDisplay').textContent = userName;
+  
+  renderAccountTabs();
+  renderContent();
+}
+
+function renderAccountTabs() {
+  const html = `
+    <div class="account-row">
+      ${data.accounts.map(acc => `
+        <div class="account-chip" style="background:${data.activeId===acc.id?'#3b5bdb':'#e8ecfd'}; border-color:${data.activeId===acc.id?'#3b5bdb':'#3b5bdb'}; color:${data.activeId===acc.id?'#fff':'#333'}">
+          <div class="account-chip-dot" style="background:${data.activeId===acc.id?'#fff':'#3b5bdb'}"></div>
+          <span onclick="data.activeId=${acc.id};renderUI()">${acc.name}</span>
+          <button onclick="event.stopPropagation()">✏️</button>
+          <button onclick="event.stopPropagation();data.accounts=data.accounts.filter(a=>a.id!==${acc.id});data.activeId=data.accounts[0]?.id||null;saveData();renderUI()">✕</button>
+        </div>
+      `).join('')}
+      <button class="add-account-btn" onclick="const name=prompt('계좌명:');if(name)addAccount(name)">+ 계좌 추가</button>
+    </div>
+    ${data.accounts.length >= 2 ? `
+      <div class="account-row">
+        <button class="combined-btn ${data.activeId===COMBINED?'active':''}" onclick="data.activeId='${COMBINED}';renderUI()">🔀 통합</button>
+      </div>
+    ` : ''}
+  `;
+  document.getElementById('accountTabs').innerHTML = html;
+}
+
+function renderContent() {
+  if (!data.activeId) {
+    document.getElementById('contentArea').innerHTML = '<div style="text-align:center;color:#aaa;font-size:14px;padding:60px 0">위에서 계좌를 추가해주세요.</div>';
+    return;
+  }
+  
+  const isCombined = data.activeId === COMBINED;
+  const acc = isCombined ? null : data.accounts.find(a => a.id === data.activeId);
+  const stocks = isCombined ? [] : (acc?.stocks || []);
+  const total = stocks.reduce((s, x) => s + x.amount, 0);
+  
+  let html = '';
+  
+  if (!isCombined && acc) {
+    html += `<input class="memo-input" placeholder="메모..." value="${acc.memo||''}" onchange="acc.memo=this.value;saveData()">`;
+  }
+  
+  html += `
+    <div style="display:grid;grid-template-columns:minmax(117px,0.26fr) 1fr 0.9fr;gap:10px;margin-bottom:14px">
+      <div class="summary-card">
+        <div class="summary-item">
+          <div class="summary-label">보유현금</div>
+          <div class="summary-value" style="color:${catColor.cash}">${fmt(stocks.filter(s=>s.category==='cash').reduce((s,x)=>s+x.amount,0))}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">총투자금액</div>
+          <div class="summary-value" style="color:#e05c5c">${fmt(total - stocks.filter(s=>s.category==='cash').reduce((s,x)=>s+x.amount,0))}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">현금성자산</div>
+          <div class="summary-value" style="color:${catColor.cash_eq}">${fmt(stocks.filter(s=>s.category==='cash_eq').reduce((s,x)=>s+x.amount,0))}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">총 보유금액</div>
+          <div class="summary-value" style="color:#1a1a2e;font-size:14px">${fmt(total)}</div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e0e4ef;border-radius:10px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:#555;margin-bottom:2px">자산 비중</div>
+        <svg viewBox="0 0 200 200" style="width:100%;height:auto">
+          <circle cx="100" cy="100" r="80" fill="#f0f2f8"/>
+          <circle cx="100" cy="100" r="50" fill="white"/>
+        </svg>
+      </div>
+      <div style="background:#fff;border:1px solid #e0e4ef;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column">
+        <div style="font-size:11px;font-weight:700;color:#555;margin-bottom:6px">계산기</div>
+        <input type="text" placeholder="예: 100+200" style="flex:1;padding:5px 6px;font-size:11px;border:1px solid #dde1ec;border-radius:6px;outline:none;background:#f7f8fc">
+      </div>
+    </div>
+  `;
+  
+  if (!isCombined) {
+    html += `
+      <div class="add-stock-form">
+        <input type="text" placeholder="종목명" id="stockName">
+        <input type="number" placeholder="금액 ($)" id="stockAmount">
+        <input type="text" placeholder="섹터" id="stockSector">
+        ${CATS.map(cat => `<button class="cat-btn" id="cat_${cat}" onclick="document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('selectedCat').value='${cat}'">${catLabel[cat]}</button>`).join('')}
+        <input type="hidden" id="selectedCat" value="cyclical">
+        <button class="add-stock-btn" onclick="addStock(document.getElementById('stockName').value,document.getElementById('stockAmount').value,document.getElementById('stockSector').value,document.getElementById('selectedCat').value);document.getElementById('stockName').value='';document.getElementById('stockAmount').value='';document.getElementById('stockSector').value='';">추가</button>
+      </div>
+    `;
+    document.getElementById('cat_cyclical').classList.add('active');
+  }
+  
+  html += `
+    <div class="tabs-row">
+      ${['all',...CATS].map(cat => `
+        <button class="tab-btn" onclick="document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${cat==='all'?'전체':catLabel[cat]}</button>
+      `).join('')}
+    </div>
+  `;
+  
+  html += `
+    <div class="stocks-container">
+      <div class="stocks-header"><span></span><span>종목</span><span style="text-align:right">금액</span><span style="text-align:center">관리</span></div>
+      ${stocks.length === 0 ? '<div style="text-align:center;color:#bbb;font-size:13px;padding:30px 0">종목이 없습니다.</div>' : stocks.map(s => `
+        <div class="stock-row">
+          <div class="stock-drag">⠿</div>
+          <div class="stock-info">
+            <span class="stock-tag" style="background:${catBg[s.category]};color:${catColor[s.category]};border:1px solid ${catBorder[s.category]}">${catLabel[s.category]}</span>
+            <span class="stock-name">${s.name}</span>
+          </div>
+          <div class="stock-amount" style="color:${catColor[s.category]}">${fmt(s.amount)}</div>
+          <div class="stock-actions">
+            <button onclick="const newName=prompt('종목명:',\'${s.name}\');if(newName){s.name=newName;saveData();renderUI()}">✏️</button>
+            <button onclick="deleteStock(${s.id})">🗑️</button>
+          </div>
+        </div>
+      `).join('')}
+      ${stocks.length > 0 ? `<div style="display:grid;grid-template-columns:16px 1fr 100px 60px;padding:8px 14px;background:#f0f2f8;border-top:2px solid #e0e4ef;font-size:11px;font-weight:700"><span></span><span>합계 (${stocks.length}종목)</span><span style="text-align:right;color:#1a1a2e">${fmt(total)}</span><span></span></div>` : ''}
+    </div>
+  `;
+  
+  document.getElementById('contentArea').innerHTML = html;
+}
+
+window.onload = function() {
+  const saved = localStorage.getItem("portfolio_userName");
+  if (saved) {
+    userName = saved;
+    loadData().then(() => renderUI());
+  } else {
+    document.getElementById('loginScreen').style.display = '';
+  }
+};
+
+document.getElementById('loginInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+</script>
+
+</body>
+</html>
