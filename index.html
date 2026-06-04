@@ -375,12 +375,11 @@ function renderContent() {
         <input type="text" placeholder="종목명" id="stockName">
         <input type="number" placeholder="금액 ($)" id="stockAmount">
         <input type="text" placeholder="섹터" id="stockSector">
-        ${CATS.map(cat => `<button class="cat-btn" id="cat_${cat}" onclick="document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('selectedCat').value='${cat}'">${catLabel[cat]}</button>`).join('')}
+        ${CATS.map(cat => `<button class="cat-btn ${cat==='cyclical'?'active':''}" id="cat_${cat}" onclick="document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('selectedCat').value='${cat}'">${catLabel[cat]}</button>`).join('')}
         <input type="hidden" id="selectedCat" value="cyclical">
         <button class="add-stock-btn" onclick="addStock(document.getElementById('stockName').value,document.getElementById('stockAmount').value,document.getElementById('stockSector').value,document.getElementById('selectedCat').value);document.getElementById('stockName').value='';document.getElementById('stockAmount').value='';document.getElementById('stockSector').value='';">추가</button>
       </div>
     `;
-    document.getElementById('cat_cyclical').classList.add('active');
   }
   
   html += `
